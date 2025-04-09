@@ -1,17 +1,12 @@
 import re
-from collections.abc import Iterator
 from operator import add, mul, sub, truediv
+from typing import Any
 
 
 def extract(formula: str):
-    pattern = (
-        r"^-(\d+\.|\.|)\d+",
-        r"(?<=[-+*/(])-(\d+\.|\.|)\d+",
-        r"(\d+\.|\.|)\d+",
-        r"[-+*/%()]",
-    )
-    finditer = re.finditer("|".join(pattern), formula)
-    return finditer
+    pattern = r"(?<!\d)-?\d*\.?\d+|[+\-*/%()]"
+    tokens = re.findall(pattern, formula)
+    return tokens
 
 
 def str_or_float_convert(string: str):
@@ -25,14 +20,14 @@ def str_or_float_convert(string: str):
     return token
 
 
-def to_postfix(tokens: Iterator[re.Match[str]]):
+def to_postfix(tokens: list[Any]):
     priority = {"+": 1, "-": 1, "*": 2, "/": 2, "%": 3}
     bracket_multiply_stack: list[bool] = []
     stack = []
     queue: list[float | str] = []
     prev_token = None
     for token in tokens:
-        token = str_or_float_convert(token.group())
+        token = str_or_float_convert(token)
         # 演算記号のとき
         if token in priority:
             while (
@@ -109,9 +104,9 @@ def postfix_calc(tokens: list[float | str]):
 
 
 def run(formula: str):
-    out = extract(formula=formula)
-    out = to_postfix(tokens=out)
-    if len(out) == 0:
+    match_list = extract(formula=formula)
+    rpn_list = to_postfix(tokens=match_list)
+    if len(rpn_list) == 0:
         return None
-    out = postfix_calc(tokens=out)
+    out = postfix_calc(tokens=rpn_list)
     return out
